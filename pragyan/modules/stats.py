@@ -1,8 +1,10 @@
 from time import time
 from speedtest import Speedtest
 from telethon import events
-from pyrogram import Client, filters  # Assuming you're using pyrogram for `@app` decorator
+from pyrogram import filters
+from config import OWNER_ID
 
+# Define constants for the size units
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 
 # Function to convert seconds into a readable time format
@@ -48,21 +50,7 @@ def speed_convert(size, byte=True):
         zero += 1
     return f"{round(size, 2)} {units[zero]}"
 
-# Handling the /stats command
-@app.on_message(filters.command("stats"))
-async def stats(client, message):
-    users = len(await get_users())  # Assuming get_users fetches user data
-    premium = await premium_users()  # Assuming premium_users fetches premium users
-    await message.reply_text(f"""
-**Total Stats of** {(await client.get_me()).mention} :
-
-**Total Users** : {users}
-**Premium Users** : {len(premium)}
-
-**__Powered by Pragyan__**
-""")
-
-# Handling the /speedtest command
+# Event handler for /speedtest command
 @app.on_message(filters.command("speedtest"))
 async def speedtest(client, message):
     speed = await message.reply("Running Speed Test. Please wait a moment...")
@@ -78,6 +66,7 @@ async def speedtest(client, message):
     result = test.results.dict()  # Get result in dictionary format
 
     # Format the output message
+    currentTime = get_readable_time(time() - botStartTime)
     string_speed = f'''
 ╭─《 🚀 SPEEDTEST INFO 》
 ├ <b>Upload:</b> <code>{speed_convert(result['upload'], False)}</code>
@@ -110,3 +99,17 @@ async def speedtest(client, message):
         print(e)  # Log any errors that occur
         await speed.delete()
         await message.reply(string_speed, parse_mode='html')  # Send the result even if screenshot fails
+
+# Event handler for /stats command
+@app.on_message(filters.command("stats"))
+async def stats(client, message):
+    users = len(await get_users())  # Assume get_users() retrieves the user list
+    premium = await premium_users()  # Assume premium_users() retrieves premium users
+    await message.reply_text(f"""
+**Total Stats of** {(await client.get_me()).mention} :
+
+**Total Users** : {users}
+**Premium Users** : {len(premium)}
+
+**__Powered by Pragyan__**
+""")
