@@ -6,6 +6,7 @@ from config import OWNER_ID
 from pragyan.core.mongo.users_db import get_users, add_user, get_user
 from pragyan.core.mongo.plans_db import premium_users
 
+from speedtest import Speedtest
 
 
 
