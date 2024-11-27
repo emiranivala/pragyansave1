@@ -72,6 +72,10 @@ def get_readable_file_size(size_in_bytes):
     
     return f"{size:.2f} {units[unit_index]}"
 
+def convert_to_mbps(speed_in_gbps):
+    return speed_in_gbps * 1000  # 1 Gbps = 1000 Mbps
+
+# Speedtest function
 @app.on_message(filters.command("speedtest"))
 async def speedtest(client, message):
     speed = await message.reply("Running Speed Test. Please wait a moment...")
@@ -81,17 +85,21 @@ async def speedtest(client, message):
     test.get_best_server()  # Get the best server for the test
 
     # Perform download and upload speed tests
-    download_speed = test.download()
-    upload_speed = test.upload()
+    download_speed = test.download() / 1_000_000  # Convert from bits to Mbps
+    upload_speed = test.upload() / 1_000_000  # Convert from bits to Mbps
 
     # Wait for both tests to complete (using `test.results` to get results after both tests)
     test_results = test.results.dict()
 
+    # Convert the speeds to Mbps
+    download_speed_mbps = convert_to_mbps(download_speed)
+    upload_speed_mbps = convert_to_mbps(upload_speed)
+
     # Format the output message
     string_speed = f'''
 ╭─《 🚀 SPEEDTEST INFO 》
-├ <b>Upload:</b> <code>{speed_convert(download_speed, False)}</code>
-├ <b>Download:</b>  <code>{speed_convert(upload_speed, False)}</code>
+├ <b>Upload:</b> <code>{upload_speed_mbps:.2f} Mbps</code>
+├ <b>Download:</b>  <code>{download_speed_mbps:.2f} Mbps</code>
 ├ <b>Ping:</b> <code>{test_results['ping']} ms</code>
 ├ <b>Time:</b> <code>{test_results['timestamp']}</code>
 ├ <b>Data Sent:</b> <code>{get_readable_file_size(int(test_results['bytes_sent']))}</code>
@@ -124,4 +132,4 @@ async def speedtest(client, message):
     except Exception as e:
         print(e)  # Log any errors that occur
         await speed.delete()
-        await message.reply_text(string_speed)
+        await message.reply_text(string_speed)  # Send t
