@@ -3,15 +3,8 @@ from speedtest import Speedtest
 from pyrogram import Client, filters
 from config import OWNER_ID
 
-from time import time
-from speedtest import Speedtest
-from pyrogram import Client, filters
-from config import OWNER_ID
-
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 
-# Initialize the Pyrogram Client (app object)
-app = Client("pragyan_bot")  # Replace with your bot's name or configuration
 
 # Function to convert seconds into a readable time format
 def get_readable_time(seconds: int) -> str:
@@ -106,16 +99,13 @@ async def speedtest(client, message):
         await speed.delete()
         await message.reply(string_speed, parse_mode='html')  # Send the result even if screenshot fails
 
-# Start the Pyrogram client (bot)
-app.run()
-
-
-
 # Event handler for /stats command
 @app.on_message(filters.command("stats"))
 async def stats(client, message):
-    users = len(await get_users())  # Assume get_users() retrieves the user list
-    premium = await premium_users()  # Assume premium_users() retrieves premium users
+    # Assume get_users() retrieves the user list
+    users = len(await get_users())  # Replace with your logic to get the user list
+    # Assume premium_users() retrieves premium users
+    premium = await premium_users()  # Replace with your logic to get premium users
     await message.reply_text(f"""
 **Total Stats of** {(await client.get_me()).mention} :
 
@@ -124,3 +114,4 @@ async def stats(client, message):
 
 **__Powered by Pragyan__**
 """)
+
