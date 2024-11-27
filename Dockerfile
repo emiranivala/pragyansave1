@@ -11,4 +11,4 @@ WORKDIR /app
 COPY . .
 
 CMD flask run -h 0.0.0.0 -p 8000 & python3 -m pragyan
-# CMD gunicorn app:app & python3 -m pragyan
+CMD gunicorn app:app & python3 -m pragyan
