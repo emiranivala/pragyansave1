@@ -34,6 +34,22 @@ async def stats(client, message):
 **__Powered by Pragyan__**
 """)
 
+def speed_convert(speed, to_mbps=True):
+    """
+    Converts speed from bits to human-readable format (e.g., Mbps, Gbps).
+    
+    :param speed: The speed in bits per second.
+    :param to_mbps: If True, convert to Mbps. If False, return as raw bits.
+    :return: A string with the formatted speed.
+    """
+    if to_mbps:
+        # Convert bits to Megabits
+        speed = speed / 1_000_000
+        return f"{speed:.2f} Mbps"
+    else:
+        # Convert bits to Gigabits
+        speed = speed / 1_000_000_000
+        return f"{speed:.2f} Gbps"
 @app.on_message(filters.command("speedtest"))
 async def speedtest(client, message):
     speed = await message.reply("Running Speed Test. Please wait a moment...")
