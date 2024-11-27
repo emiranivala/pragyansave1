@@ -34,6 +34,9 @@ async def stats(client, message):
 **__Powered by Pragyan__**
 """)
 
+from speedtest import Speedtest
+
+# Define the speed_convert function
 def speed_convert(speed, to_mbps=True):
     """
     Converts speed from bits to human-readable format (e.g., Mbps, Gbps).
@@ -50,6 +53,8 @@ def speed_convert(speed, to_mbps=True):
         # Convert bits to Gigabits
         speed = speed / 1_000_000_000
         return f"{speed:.2f} Gbps"
+
+# Define the get_readable_file_size function
 def get_readable_file_size(size_in_bytes):
     """
     Converts a size in bytes to a human-readable format (KB, MB, GB, etc.).
@@ -57,7 +62,6 @@ def get_readable_file_size(size_in_bytes):
     :param size_in_bytes: The size in bytes.
     :return: A string with the readable size.
     """
-    # Define the units for conversion
     units = ["B", "KB", "MB", "GB", "TB", "PB"]
     unit_index = 0
     size = size_in_bytes
@@ -110,10 +114,14 @@ async def speedtest(client, message):
 
     try:
         # Send the speed test results with the screenshot (if available)
-        await message.reply(string_speed, file=test_results['share'], parse_mode='html')
+        if 'share' in test_results and test_results['share']:
+            await message.reply_photo(test_results['share'], caption=string_speed, parse_mode='html')
+        else:
+            # If no screenshot is available, just send the message
+            await message.reply_text(string_speed, parse_mode='html')
+
         await speed.delete()  # Delete the initial speed test message
     except Exception as e:
         print(e)  # Log any errors that occur
         await speed.delete()
-        await message.reply(string_speed, parse_mode='html')  # Send the result even if screenshot fails
-
+        await message.reply_text(string_speed, parse_mode='html')  # Send the result even if screenshot fails
