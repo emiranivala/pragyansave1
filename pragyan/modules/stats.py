@@ -72,8 +72,8 @@ def get_readable_file_size(size_in_bytes):
     
     return f"{size:.2f} {units[unit_index]}"
 
-def convert_to_mbps(speed_in_gbps):
-    return speed_in_gbps * 1000  # 1 Gbps = 1000 Mbps
+def convert_to_mbps(speed_in_bits):
+    return speed_in_bits / 1_000_000  # 1 Mbps = 1,000,000 bits
 
 # Speedtest function
 @app.on_message(filters.command("speedtest"))
@@ -84,16 +84,16 @@ async def speedtest(client, message):
     test = Speedtest()
     test.get_best_server()  # Get the best server for the test
 
-    # Perform download and upload speed tests
-    download_speed = test.download() / 1_000_000  # Convert from bits to Mbps
-    upload_speed = test.upload() / 1_000_000  # Convert from bits to Mbps
+    # Perform download and upload speed tests (results are in bits per second)
+    download_speed = test.download()  # This is in bits per second
+    upload_speed = test.upload()  # This is in bits per second
+
+    # Convert the speeds from bits to Mbps
+    download_speed_mbps = convert_to_mbps(download_speed)  # Convert to Mbps
+    upload_speed_mbps = convert_to_mbps(upload_speed)  # Convert to Mbps
 
     # Wait for both tests to complete (using `test.results` to get results after both tests)
     test_results = test.results.dict()
-
-    # Convert the speeds to Mbps
-    download_speed_mbps = convert_to_mbps(download_speed)
-    upload_speed_mbps = convert_to_mbps(upload_speed)
 
     # Format the output message
     string_speed = f'''
@@ -132,4 +132,5 @@ async def speedtest(client, message):
     except Exception as e:
         print(e)  # Log any errors that occur
         await speed.delete()
-        await message.reply_text(string_speed)  # Send t
+        await message.reply_text(string_speed)  # Send the result even if screenshot fails
+
