@@ -1,39 +1,58 @@
-import speedtest
-from pragyan import app
-from pyrogram import filters
-from config import OWNER_ID
-from pragyan.core.mongo.users_db import get_users, add_user, get_user
-from pragyan.core.mongo.plans_db import premium_users
+from time import time
+from speedtest import Speedtest
+from telethon import events
+from pyrogram import Client, filters  # Assuming you're using pyrogram for `@app` decorator
 
-# Function to convert bytes to a human-readable file size
-def get_readable_file_size(size_in_bytes):
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-        if size_in_bytes < 1024.0:
-            return f"{size_in_bytes:.2f} {unit}"
-        size_in_bytes /= 1024.0
+SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 
-# Function to convert speed (in bits per second) to a readable format
-def speed_convert(speed, is_upload=True):
-    if is_upload:
-        return get_readable_file_size(speed / 8)  # Convert bits to bytes
-    else:
-        return get_readable_file_size(speed / 8)  # Convert bits to bytes
+# Function to convert seconds into a readable time format
+def get_readable_time(seconds: int) -> str:
+    result = ''
+    (days, remainder) = divmod(seconds, 86400)
+    days = int(days)
+    if days != 0:
+        result += f'{days}d'
+    (hours, remainder) = divmod(remainder, 3600)
+    hours = int(hours)
+    if hours != 0:
+        result += f'{hours}h'
+    (minutes, seconds) = divmod(remainder, 60)
+    minutes = int(minutes)
+    if minutes != 0:
+        result += f'{minutes}m'
+    seconds = int(seconds)
+    result += f'{seconds}s'
+    return result
 
-@app.on_message(group=10)
-async def chat_watcher_func(_, message):
+# Function to convert file size into a human-readable format
+def get_readable_file_size(size_in_bytes) -> str:
+    if size_in_bytes is None:
+        return '0B'
+    index = 0
+    while size_in_bytes >= 1024:
+        size_in_bytes /= 1024
+        index += 1
     try:
-        if message.from_user:
-            us_in_db = await get_user(message.from_user.id)
-            if not us_in_db:
-                await add_user(message.from_user.id)
-    except:
-        pass
+        return f'{round(size_in_bytes, 2)}{SIZE_UNITS[index]}'
+    except IndexError:
+        return 'File too large'
 
+# Function to convert speed into a human-readable format
+def speed_convert(size, byte=True):
+    if not byte: size = size / 8  # Convert bits to bytes
+    power = 2 ** 10
+    zero = 0
+    units = {0: "B/s", 1: "KB/s", 2: "MB/s", 3: "GB/s", 4: "TB/s"}
+    while size >= power:
+        size /= power
+        zero += 1
+    return f"{round(size, 2)} {units[zero]}"
 
+# Handling the /stats command
 @app.on_message(filters.command("stats"))
 async def stats(client, message):
-    users = len(await get_users())
-    premium = await premium_users()
+    users = len(await get_users())  # Assuming get_users fetches user data
+    premium = await premium_users()  # Assuming premium_users fetches premium users
     await message.reply_text(f"""
 **Total Stats of** {(await client.get_me()).mention} :
 
@@ -43,43 +62,51 @@ async def stats(client, message):
 **__Powered by Pragyan__**
 """)
 
+# Handling the /speedtest command
 @app.on_message(filters.command("speedtest"))
-async def speedtest_func(client, message):
+async def speedtest(client, message):
+    speed = await message.reply("Running Speed Test. Please wait a moment...")
+
     # Initialize Speedtest object
-    st = speedtest.Speedtest()
+    test = Speedtest()
+    test.get_best_server()  # Get the best server for the test
 
-    # Get best server for testing
-    st.get_best_server()
+    # Perform download and upload speed tests
+    test.download()
+    test.upload()
+    test.results.share()  # Share the results for screenshot link
+    result = test.results.dict()  # Get result in dictionary format
 
-    # Perform the speed test
-    result = st.results.dict()
-
-    # Prepare the message with the speedtest results
-    speedtest_message = f"""
-🚀 <b>SPEEDTEST INFO</b>
+    # Format the output message
+    string_speed = f'''
+╭─《 🚀 SPEEDTEST INFO 》
 ├ <b>Upload:</b> <code>{speed_convert(result['upload'], False)}</code>
 ├ <b>Download:</b>  <code>{speed_convert(result['download'], False)}</code>
 ├ <b>Ping:</b> <code>{result['ping']} ms</code>
 ├ <b>Time:</b> <code>{result['timestamp']}</code>
 ├ <b>Data Sent:</b> <code>{get_readable_file_size(int(result['bytes_sent']))}</code>
 ╰ <b>Data Received:</b> <code>{get_readable_file_size(int(result['bytes_received']))}</code>
-
-🌐 <b>SPEEDTEST SERVER</b>
+╭─《 🌐 SPEEDTEST SERVER 》
 ├ <b>Name:</b> <code>{result['server']['name']}</code>
 ├ <b>Country:</b> <code>{result['server']['country']}, {result['server']['cc']}</code>
 ├ <b>Sponsor:</b> <code>{result['server']['sponsor']}</code>
 ├ <b>Latency:</b> <code>{result['server']['latency']}</code>
 ├ <b>Latitude:</b> <code>{result['server']['lat']}</code>
 ╰ <b>Longitude:</b> <code>{result['server']['lon']}</code>
-
-👤 <b>CLIENT DETAILS</b>
+╭─《 👤 CLIENT DETAILS 》
 ├ <b>IP Address:</b> <code>{result['client']['ip']}</code>
 ├ <b>Latitude:</b> <code>{result['client']['lat']}</code>
 ├ <b>Longitude:</b> <code>{result['client']['lon']}</code>
 ├ <b>Country:</b> <code>{result['client']['country']}</code>
 ├ <b>ISP:</b> <code>{result['client']['isp']}</code>
 ╰ <b>ISP Rating:</b> <code>{result['client']['isprating']}</code>
-    """
+'''
 
-    # Send the speedtest result as a reply
-    await message.reply_text(speedtest_message)
+    try:
+        # Send the speed test results with the screenshot (if available)
+        await message.reply(string_speed, file=result['share'], parse_mode='html')
+        await speed.delete()  # Delete the initial speed test message
+    except Exception as e:
+        print(e)  # Log any errors that occur
+        await speed.delete()
+        await message.reply(string_speed, parse_mode='html')  # Send the result even if screenshot fails
