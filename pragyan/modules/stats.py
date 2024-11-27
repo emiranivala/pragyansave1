@@ -115,13 +115,13 @@ async def speedtest(client, message):
     try:
         # Send the speed test results with the screenshot (if available)
         if 'share' in test_results and test_results['share']:
-            await message.reply_photo(test_results['share'], caption=string_speed, parse_mode='html')
+            await message.reply_photo(test_results['share'], caption=string_speed)
         else:
             # If no screenshot is available, just send the message
-            await message.reply_text(string_speed, parse_mode='html')
+            await message.reply_text(string_speed)  # No parse_mode used
 
         await speed.delete()  # Delete the initial speed test message
     except Exception as e:
         print(e)  # Log any errors that occur
         await speed.delete()
-        await message.reply_text(string_speed, parse_mode='html')  # Send the result even if screenshot fails
+        await message.reply_text(string_speed)
