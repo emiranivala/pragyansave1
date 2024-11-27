@@ -7,7 +7,7 @@ app = Flask(__name__)
 def home():
     return """
     <center>
-        <img src="/static/gagan.png" style="border-radius: 2px;"/>/>
+        <img src="/static/pragyan.jpg" style="border-radius: 2px;"/>/>
     </center>
     <style>
         body {
@@ -26,7 +26,7 @@ def home():
         }
     </style>
     <footer>
-        Made with 💕 by pragyan.in
+        Made with 💕 by @Pragyan
     </footer>
     """
 
