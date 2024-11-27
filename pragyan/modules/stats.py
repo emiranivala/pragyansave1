@@ -50,6 +50,24 @@ def speed_convert(speed, to_mbps=True):
         # Convert bits to Gigabits
         speed = speed / 1_000_000_000
         return f"{speed:.2f} Gbps"
+def get_readable_file_size(size_in_bytes):
+    """
+    Converts a size in bytes to a human-readable format (KB, MB, GB, etc.).
+    
+    :param size_in_bytes: The size in bytes.
+    :return: A string with the readable size.
+    """
+    # Define the units for conversion
+    units = ["B", "KB", "MB", "GB", "TB", "PB"]
+    unit_index = 0
+    size = size_in_bytes
+    
+    while size >= 1024 and unit_index < len(units) - 1:
+        size /= 1024
+        unit_index += 1
+    
+    return f"{size:.2f} {units[unit_index]}"
+
 @app.on_message(filters.command("speedtest"))
 async def speedtest(client, message):
     speed = await message.reply("Running Speed Test. Please wait a moment...")
