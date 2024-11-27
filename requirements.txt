@@ -15,5 +15,6 @@ reportlab
 PyMuPDF
 # cryptg
 gunicorn==20.1.0
+speedtest-cli
 Jinja2==3.0.3
 itsdangerous==2.0.1
