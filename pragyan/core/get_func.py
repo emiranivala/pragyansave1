@@ -516,9 +516,9 @@ async def callback_query_handler(event):
     elif event.data == b'logout':
         result = mcollection.delete_one({"user_id": user_id})
         if result.deleted_count > 0:
-          await event.respond("Logged out and deleted session successfully.")
+            await event.respond("Logged out and deleted session successfully.")
         else:
-          await event.respond("You are not logged in")   
+            await event.respond("You are not logged in")   
 
     elif event.data == b'setthumb':
         pending_photos[user_id] = True
@@ -550,6 +550,7 @@ async def callback_query_handler(event):
             await event.respond('Thumbnail removed successfully!')
         except FileNotFoundError:
             await event.respond("No thumbnail found to remove.")
+
 
 
 @gf.on(events.NewMessage(func=lambda e: e.sender_id in pending_photos))
