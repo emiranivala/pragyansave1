@@ -17,6 +17,22 @@ async def generate_random_name(length=8):
 
 users_loop = {}
 
+
+@app.on_message(filters.command("setchatid"))
+async def set_chat_id(_, message: Message):
+    user_id = message.chat.id
+    try:
+        # Extract chat ID from the command
+        if len(message.command) < 2:
+            await message.reply("Usage: /setchatid <chatid>")
+            return
+
+        chat_id = int(message.command[1])
+        user_chat_ids[user_id] = chat_id  # Save chat ID for the user
+        await message.reply("Chat ID set successfully! Bot will start sending messages to this chat.")
+    except ValueError:
+        await message.reply("Invalid chat ID! Please enter a valid numerical ID.")
+        
 @app.on_message(filters.regex(r'https?://[^\s]+'))
 async def single_link(_, message):
     user_id = message.chat.id
